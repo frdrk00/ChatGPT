@@ -1,3 +1,4 @@
+import ClientProvider from "@/components/ClientProvider";
 import Login from "@/components/Login";
 import SessionProvider from "@/components/SessionProvider";
 import SideBar from "@/components/SideBar";
@@ -15,7 +16,7 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const session = await getServerSession(authOptions)
+  const session = await getServerSession(authOptions);
   return (
     <html lang="en">
       <body>
@@ -27,9 +28,7 @@ export default async function RootLayout({
               <div className="no-scrollbar bg-[#202123] max-w-xs h-screen overflow-y-scroll md:min-w-[20rem]">
                 <SideBar />
               </div>
-
-              {/* ClientProvider - Notification */}
-
+              <ClientProvider />
               <div className="bg-[#343541] flex-1">{children}</div>
             </div>
           )}

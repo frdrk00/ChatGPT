@@ -1,4 +1,4 @@
-'use client'
+"use client";
 
 import { db } from "@/firebase";
 import { PaperAirplaneIcon } from "@heroicons/react/24/solid";
@@ -6,49 +6,73 @@ import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { useSession } from "next-auth/react";
 import { FormEvent, useState } from "react";
 
+import { toast } from "react-hot-toast"
+
 type Props = {
-  chatId: string
+  chatId: string;
 };
 
 const ChatInput = ({ chatId }: Props) => {
-    const [prompt, setPrompt] = useState("")
-    const { data: session } = useSession()
+  const [prompt, setPrompt] = useState("");
+  const { data: session } = useSession();
 
-  // useSWR to get model
+  // TODO: useSWR to get model
+  const model = "text-davinci-003";
 
-    const sendMessage = async (e: FormEvent<HTMLFormElement>) => {
-      e.preventDefault();
+  const sendMessage = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
 
-      if (!prompt) return;
+    if (!prompt) return;
 
-      const input = prompt.trim();
-      setPrompt("");
+    const input = prompt.trim();
+    setPrompt("");
 
-      const message: Message = {
-        text: input,
-        createdAt: serverTimestamp(),
-        user: {
-          _id: session?.user?.email!,
-          name: session?.user?.email!,
-          avatar:
-            session?.user?.email! ||
-            `https://ui-avatars.com/api/?name=${session?.user?.name}`,
-        },
-      };
+    const message: Message = {
+      text: input,
+      createdAt: serverTimestamp(),
+      user: {
+        _id: session?.user?.email!,
+        name: session?.user?.email!,
+        avatar:
+          session?.user?.email! ||
+          `https://ui-avatars.com/api/?name=${session?.user?.name}`,
+      },
+    };
 
-      await addDoc(
-        collection(
-          db,
-          "users",
-          session?.user?.email!,
-          "chats",
-          chatId,
-          "messages"
-        ),
-        message
-      );
+    await addDoc(
+      collection(
+        db,
+        "users",
+        session?.user?.email!,
+        "chats",
+        chatId,
+        "messages"
+      ),
+      message
+    );
 
-    }
+    // Toast notification to say Loading!
+    const notification = toast.loading('ChatGPT is thinking...')
+
+
+    await fetch("/api/askQuestion", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        prompt: input,
+        chatId,
+        model,
+        session,
+      }),
+    }).then(() => {
+      // Toast notification to say successful!
+      toast.success('ChatGPT has responded!', {
+        id: notification,
+      })
+    })
+  };
 
   return (
     <div className="bg-gray-700/50 text-gray-400 rounded-lg text-sm">
